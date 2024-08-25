@@ -36,7 +36,7 @@ app.use(cookieParser());
 
 // CORS Configuration
 app.use(cors({
-  origin: 'https://learnfromhome.vercel.app', // Allow requests from this origin
+  origin: [process.env.FRONTEND_URL], // Allow requests from this origin
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Specify allowed methods
   credentials: true // Allow cookies and other credentials to be sent
 }));
