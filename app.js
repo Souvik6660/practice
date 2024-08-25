@@ -22,7 +22,7 @@ cloudinary.v2.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Razorpay Configuration
+// Razorpay configuration
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_SECRET,
@@ -36,13 +36,12 @@ app.use(cookieParser());
 
 // CORS Configuration
 app.use(cors({
-  origin: 'https://learnfromhome.vercel.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+  origin: 'https://learnfromhome.vercel.app', // Allow requests from this origin
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Specify allowed methods
+  credentials: true // Allow cookies and other credentials to be sent
 }));
 
-// Health Check Route
+// Health check route
 app.use('/ping', (req, res) => {
   res.send('YES I AM RUNNING');
 });
@@ -53,15 +52,9 @@ app.use('/api/v1/courses', courseRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1', miscRoutes);
 
-// 404 Handler
+// 404 handler
 app.all('*', (req, res) => {
   res.status(404).send('Oops! 404 page not found');
-});
-
-// Global Error Handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something went wrong!');
 });
 
 export { app, razorpay };
