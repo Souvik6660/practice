@@ -6,10 +6,10 @@ import morgan from 'morgan';
 import cloudinary from 'cloudinary';
 import Razorpay from 'razorpay';
 import userRoutes from './routes/userRoutes.js';
-import courseRoutes from './routes/courseRoutes.js'
+import courseRoutes from './routes/courseRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import miscRoutes from './routes/miscRoutes.js';
 
-import paymentRoutes from './routes/paymentRoutes.js'
-import miscRoutes from './routes/miscRoutes.js'
 // Load environment variables
 config();
 
@@ -35,7 +35,11 @@ app.use(morgan('dev'));
 app.use(cookieParser());
 
 // CORS Configuration
-app.use(cors());
+app.use(cors({
+  origin: 'https://learnfromhome.vercel.app', // Allow requests from this origin
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Specify allowed methods
+  credentials: true // Allow cookies and other credentials to be sent
+}));
 
 // Health check route
 app.use('/ping', (req, res) => {
@@ -47,7 +51,6 @@ app.use('/api/v1/user', userRoutes);
 app.use('/api/v1/courses', courseRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1', miscRoutes);
-
 
 // 404 handler
 app.all('*', (req, res) => {
