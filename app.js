@@ -41,6 +41,9 @@ app.use(cors({
   credentials: true // Allow cookies and other credentials to be sent
 }));
 
+// Handle preflight requests
+app.options('*', cors());
+
 // Health check route
 app.use('/ping', (req, res) => {
   res.send('YES I AM RUNNING');
