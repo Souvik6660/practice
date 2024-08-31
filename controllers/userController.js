@@ -288,3 +288,60 @@ export const changePassword = async (req, res, next) => {
     next(new AppError('Failed to change password', 500));
   }
 };
+export const updateUser = async (req, res, next) => {
+  try {
+    const { fullName, email } = req.body;
+    const { id } = req.user; // Get the user ID from the authenticated user
+
+    // Find the user by ID
+    const user = await User.findById(id);
+
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    // Update the user's full name and email if provided
+    if (fullName) user.fullName = fullName;
+    if (email) user.email = email;
+
+    // Check if a file (new avatar) is provided
+    if (req.file) {
+      // If there's already an avatar, delete it from Cloudinary
+      if (user.avatar.public_id) {
+        await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+      }
+
+      // Upload the new avatar to Cloudinary
+      const result = await cloudinary.v2.uploader.upload(req.file.path, {
+        folder: 'lms',
+        width: 250,
+        height: 250,
+        gravity: 'faces',
+        crop: 'fill',
+      });
+
+      // Update the avatar details in the user model
+      user.avatar.public_id = result.public_id;
+      user.avatar.secure_url = result.secure_url;
+
+      // Remove the uploaded file from local storage
+      await fs.rm(`uploads/${req.file.filename}`);
+    }
+
+    // Save the updated user data
+    await user.save();
+
+    // Send the updated user data in response
+    res.status(200).json({
+      success: true,
+      message: 'User updated successfully',
+      user,
+    });
+  } catch (error) {
+    return next(new AppError('An error occurred while updating the user', 500));
+  }
+};
+
+
+
+
