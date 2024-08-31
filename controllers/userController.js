@@ -5,17 +5,12 @@ import cloudinary from 'cloudinary';
 import SendEmail from "../utils/SendEmail.js";
 import crypto from 'crypto'; // For ES6 import syntax
 
-
-
-
 const cookieOptions = {
   secure: process.env.NODE_ENV === 'production' ? true : false,
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  httpOnly: true,
+  httpOnly: false,
+  sameSite: 'None',
 };
-
-
-
 
 export const register = async (req, res, next) => {
   // Destructuring the necessary data from req object
@@ -29,7 +24,7 @@ export const register = async (req, res, next) => {
   // Check if the user exists with the provided email
   const userExists = await User.findOne({ email });
 
-  // If user exists send the reponse
+  // If user exists send the response
   if (userExists) {
     return next(new AppError('Email already exists', 409));
   }
@@ -141,7 +136,8 @@ export const logout = (req, res) => {
   res.cookie('token', null, {
       secure: process.env.NODE_ENV === 'production',
       maxAge: 0,
-      httpOnly: true
+      httpOnly: false,
+      sameSite: 'None',
   });
   res.status(200).json({
       success: true,
@@ -149,22 +145,19 @@ export const logout = (req, res) => {
   });
 };
 
-export const  getProfile=async(req,res)=>{
+export const getProfile = async (req, res) => {
   try {
-    const userId=req.user.id
-  const user=await User.findById(userId);
-  res.status(200).json({
-    success:true,
-    message:'user details',
-    user
-  })
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    res.status(200).json({
+      success: true,
+      message: 'User details',
+      user
+    });
   } catch (error) {
-    return next(new AppError('Failed to load details',500))
+    return next(new AppError('Failed to load details', 500));
   }
-  
-} 
-
-
+};
 
 export const forgotPassword = async (req, res, next) => {
   const { email } = req.body;
@@ -205,8 +198,6 @@ export const forgotPassword = async (req, res, next) => {
     next(new AppError('Failed to send email. Please try again later.', 500));
   }
 };
-
-
 
 export const resetPassword = async (req, res, next) => {
   try {
@@ -250,11 +241,6 @@ export const resetPassword = async (req, res, next) => {
   }
 };
 
-
-
-
-
-
 export const changePassword = async (req, res, next) => {
   try {
     // Destructuring the necessary data from the req object
@@ -295,70 +281,10 @@ export const changePassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Password changed successfully',
+      message: 'Password has been changed successfully',
+      user,
     });
   } catch (error) {
-    next(error);
+    next(new AppError('Failed to change password', 500));
   }
 };
-
-export const updateUser = async (req, res, next) => {
-  try {
-    const { fullName } = req.body;
-    const { id } = req.params;
-
-    console.log(`Received update request for user ID: ${id}`);
-
-    const user = await User.findById(id);
-
-    if (!user) {
-      console.error(`User not found with ID: ${id}`);
-      return next(new AppError('Invalid user id or user does not exist', 404));
-    }
-
-    if (fullName) {
-      user.fullName = fullName;
-    }
-
-    if (req.file) {
-      console.log(`Uploading new avatar for user ID: ${id}`);
-      await cloudinary.v2.uploader.destroy(user.avatar.public_id);
-
-      try {
-        const result = await cloudinary.v2.uploader.upload(req.file.path, {
-          folder: 'lms',
-          width: 250,
-          height: 250,
-          gravity: 'faces',
-          crop: 'fill',
-        });
-
-        if (result) {
-          user.avatar.public_id = result.public_id;
-          user.avatar.secure_url = result.secure_url;
-
-          await fs.rm(`uploads/${req.file.filename}`);
-        }
-      } catch (error) {
-        console.error('Error uploading file:', error);
-        return next(
-          new AppError(error.message || 'File not uploaded, please try again', 400)
-        );
-      }
-    }
-
-    await user.save();
-
-    console.log(`User details updated successfully for user ID: ${id}`);
-
-    res.status(200).json({
-      success: true,
-      message: 'User details updated successfully',
-    });
-  } catch (error) {
-    console.error('Error updating user:', error);
-    next(error);
-  }
-};
-
-
